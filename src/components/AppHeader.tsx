@@ -1,5 +1,10 @@
+
+'use client';
+
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { CrossmintConnectButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui';
+import { cn } from '@/lib/utils';
 
 const navLinks = [
   { href: "/trade", label: "Trade" },
@@ -11,6 +16,14 @@ const navLinks = [
 ];
 
 export default function AppHeader() {
+  const { wallet, status, disconnect } = useCrossmintWallet();
+  const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID;
+
+  const formatAddress = (address: string) => {
+    if (!address) return "";
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  }
+
   return (
     <header className="bg-card text-card-foreground border-b border-border">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -30,9 +43,33 @@ export default function AppHeader() {
           <Button variant="ghost" size="sm" className="text-sm text-muted-foreground hover:text-foreground">
             Add Funds
           </Button>
-          <Button variant="default" size="sm" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90">
-            Connect
-          </Button>
+          {status === 'connected' && wallet?.address ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden md:inline">
+                {formatAddress(wallet.address)}
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => disconnect()} 
+                className="text-sm border-primary text-primary hover:bg-primary/10"
+              >
+                Disconnect
+              </Button>
+            </div>
+          ) : status === 'connecting' ? (
+             <Button variant="default" size="sm" disabled className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+                Connecting...
+              </Button>
+          ) : crossmintClientId ? (
+            <CrossmintConnectButton
+              className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
+            />
+          ) : (
+            <Button variant="default" size="sm" disabled title="Crossmint Client ID not configured" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+              Connect (Setup pending)
+            </Button>
+          )}
         </div>
       </div>
     </header>
