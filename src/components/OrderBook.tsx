@@ -9,6 +9,7 @@ import { ArrowUpDown } from 'lucide-react';
 
 interface OrderBookProps {
   token: CoinGeckoToken | null;
+  currentPrice: number | null; // For central price display
 }
 
 const generateMockOrderBookData = (basePrice: number): OrderBookData => {
@@ -18,87 +19,70 @@ const generateMockOrderBookData = (basePrice: number): OrderBookData => {
 
   for (let i = 0; i < numEntries; i++) {
     bids.push({
-      price: basePrice - (i + 1) * (basePrice * 0.001) * (Math.random() * 0.5 + 0.75), // Bids slightly lower
-      quantity: Math.random() * 10 + 1,
+      price: basePrice - (i + 1) * (basePrice * 0.0005 + Math.random() * 0.01 * (i+1)), // Bids slightly lower
+      quantity: Math.random() * 5 + 0.1,
     });
     asks.push({
-      price: basePrice + (i + 1) * (basePrice * 0.001) * (Math.random() * 0.5 + 0.75), // Asks slightly higher
-      quantity: Math.random() * 10 + 1,
+      price: basePrice + (i + 1) * (basePrice * 0.0005 + Math.random() * 0.01 * (i+1)), // Asks slightly higher
+      quantity: Math.random() * 5 + 0.1,
     });
   }
-  // Sort bids descending, asks ascending
   bids.sort((a, b) => b.price - a.price);
-  asks.sort((a, b) => a.price - b.price);
+  asks.sort((a, b) => a.price - b.price).reverse(); // Asks should be ascending from center
   return { bids, asks };
 };
 
 
-export default function OrderBook({ token }: OrderBookProps) {
+export default function OrderBook({ token, currentPrice }: OrderBookProps) {
   const [orderBook, setOrderBook] = useState<OrderBookData | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (token && token.current_price) {
+    if (token && currentPrice) {
       setLoading(true);
-      // Initial mock data
-      setOrderBook(generateMockOrderBookData(token.current_price));
+      setOrderBook(generateMockOrderBookData(currentPrice));
       setLoading(false);
 
-      // Mock real-time updates
       const intervalId = setInterval(() => {
         setOrderBook(prevOrderBook => {
-          if (prevOrderBook && token.current_price) {
-             // Simple update: regenerate based on current token price or slightly adjust existing prices/quantities
-            return generateMockOrderBookData(token.current_price + (Math.random() - 0.5) * token.current_price * 0.001);
+          if (prevOrderBook && currentPrice) {
+            return generateMockOrderBookData(currentPrice + (Math.random() - 0.5) * currentPrice * 0.0001);
           }
           return prevOrderBook;
         });
-      }, 3000); // Update every 3 seconds
+      }, 3000);
 
       return () => clearInterval(intervalId);
     } else {
       setOrderBook(null);
     }
-  }, [token]);
-
-  if (!token) {
-    return (
-      <Card className="shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Order Book</CardTitle>
-          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-40 w-full" />
-          <p className="text-xs text-muted-foreground mt-2">Select a token to see the order book.</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  }, [token, currentPrice]);
   
   const renderOrderBookTable = (entries: OrderBookEntry[], type: 'Bids' | 'Asks') => (
     <div className="flex-1">
-      <h3 className={`text-lg font-semibold mb-2 ${type === 'Bids' ? 'text-green-500' : 'text-red-500'}`}>{type}</h3>
       <Table className="text-xs">
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50%]">Price (USD)</TableHead>
-            <TableHead className="w-[50%] text-right">Amount ({token.symbol.toUpperCase()})</TableHead>
+          <TableRow className="border-b-0">
+            <TableHead className={`w-[33%] py-1 px-2 ${type === 'Bids' ? 'text-left' : 'text-left'}`}>Price (USD)</TableHead>
+            <TableHead className="w-[33%] py-1 px-2 text-right">Size</TableHead>
+            <TableHead className="w-[33%] py-1 px-2 text-right">Mine</TableHead> {/* Mocked "Mine" */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading && Array.from({ length: 5 }).map((_, i) => (
-            <TableRow key={`skeleton-${type}-${i}`}>
-              <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-              <TableCell className="text-right"><Skeleton className="h-4 w-full" /></TableCell>
+            <TableRow key={`skeleton-${type}-${i}`} className="border-b-0">
+              <TableCell className="py-0.5 px-2"><Skeleton className="h-3 w-full" /></TableCell>
+              <TableCell className="py-0.5 px-2 text-right"><Skeleton className="h-3 w-full" /></TableCell>
+              <TableCell className="py-0.5 px-2 text-right"><Skeleton className="h-3 w-full" /></TableCell>
             </TableRow>
           ))}
           {!loading && entries.map((entry, index) => (
-            <TableRow key={`${type}-${index}`}>
-              <TableCell className={`${type === 'Bids' ? 'text-green-600' : 'text-red-600'}`}>
-                {entry.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 5 })}
+            <TableRow key={`${type}-${index}-${entry.price}`} className="border-b-0 hover:bg-muted/30">
+              <TableCell className={`py-0.5 px-2 ${type === 'Bids' ? 'text-green-500' : 'text-red-500'}`}>
+                {entry.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </TableCell>
-              <TableCell className="text-right">{entry.quantity.toFixed(4)}</TableCell>
+              <TableCell className="py-0.5 px-2 text-right text-foreground">{entry.quantity.toFixed(4)}</TableCell>
+              <TableCell className="py-0.5 px-2 text-right text-muted-foreground">{(entry.price * entry.quantity / 1000).toFixed(2)}K</TableCell> 
             </TableRow>
           ))}
         </TableBody>
@@ -106,21 +90,30 @@ export default function OrderBook({ token }: OrderBookProps) {
     </div>
   );
 
-
   return (
-    <Card className="shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{token.name} Order Book</CardTitle>
-        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+    <Card className="h-full flex flex-col">
+      <CardHeader className="py-3 px-4">
+        <CardTitle className="text-sm font-medium">Order Book</CardTitle>
       </CardHeader>
-      <CardContent>
-        { !orderBook && !loading ? (
-          <p>No order book data available.</p>
-        ) : (
-          <div className="flex flex-col md:flex-row gap-4 max-h-[400px] overflow-y-auto">
-            {orderBook?.bids && renderOrderBookTable(orderBook.bids, 'Bids')}
-            {orderBook?.asks && renderOrderBookTable(orderBook.asks, 'Asks')}
+      <CardContent className="flex-grow p-0 flex flex-col overflow-hidden">
+        { !token ? (
+          <div className="flex-grow flex items-center justify-center p-4">
+            <p className="text-xs text-muted-foreground">Select a token to see the order book.</p>
           </div>
+        ) : !orderBook && !loading ? (
+          <div className="flex-grow flex items-center justify-center p-4">
+           <p className="text-xs text-muted-foreground">No order book data available.</p>
+          </div>
+        ) : (
+          <>
+            {orderBook?.asks && renderOrderBookTable(orderBook.asks.slice().reverse(), 'Asks')}
+            <div className="py-1.5 px-4 border-t border-b border-border my-1">
+                <span className={`text-lg font-semibold ${(currentPrice ?? 0) > (token.current_price ?? 0) ? 'text-green-500' : 'text-red-500'}`}>
+                    {currentPrice?.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) ?? '-.--'}
+                </span>
+            </div>
+            {orderBook?.bids && renderOrderBookTable(orderBook.bids, 'Bids')}
+          </>
         )}
       </CardContent>
     </Card>

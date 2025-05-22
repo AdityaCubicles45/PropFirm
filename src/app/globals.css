@@ -8,58 +8,72 @@ body {
 
 @layer base {
   :root {
-    --background: 233 60% 96%; /* Very light Indigo #E8EAF6 */
-    --foreground: 233 39% 25%; /* Darker Indigo for text */
-    --card: 0 0% 100%;
-    --card-foreground: 233 39% 25%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 233 39% 25%;
-    --primary: 233 47% 48%; /* Deep Indigo #3F51B5 */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 233 30% 90%; /* Lighter indigo for secondary elements */
-    --secondary-foreground: 233 39% 25%;
-    --muted: 233 30% 90%;
-    --muted-foreground: 233 30% 55%;
-    --accent: 258 59% 57%; /* Violet #7953D2 */
-    --accent-foreground: 0 0% 100%; /* White */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 233 30% 85%;
-    --input: 233 30% 88%;
-    --ring: 233 47% 48%; /* Deep Indigo for focus rings */
-    --chart-1: 233 47% 48%;
-    --chart-2: 258 59% 57%;
-    --chart-3: 220 50% 60%;
-    --chart-4: 210 55% 65%;
-    --chart-5: 200 60% 70%;
+    --background: 220 15% 8%; /* Very dark blue-gray */
+    --foreground: 210 20% 90%; /* Light gray for text */
+
+    --card: 220 15% 13%; /* Darker card background */
+    --card-foreground: 210 20% 90%;
+
+    --popover: 220 15% 12%;
+    --popover-foreground: 210 20% 90%;
+
+    --primary: 140 65% 50%; /* Green for "BUY" actions */
+    --primary-foreground: 210 20% 98%; /* White text on green */
+
+    --secondary: 220 15% 25%; /* For less emphasized elements */
+    --secondary-foreground: 210 20% 80%;
+
+    --muted: 220 15% 20%; /* Muted backgrounds */
+    --muted-foreground: 210 25% 70%; /* Muted text */
+
+    --accent: 200 80% 60%; /* A brighter blue for accents if needed */
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 60% 50%; /* Red for "SELL" actions / destructive */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 25%; /* Borders between elements */
+    --input: 220 15% 18%; /* Input field background */
+    --ring: 140 65% 55%; /* Focus ring, slightly lighter green */
+
+    --chart-1: 140 65% 50%; /* Green */
+    --chart-2: 0 60% 50%;   /* Red */
+    --chart-3: 200 80% 60%; /* Blue */
+    --chart-4: 40 90% 60%;  /* Orange/Yellow */
+    --chart-5: 280 70% 65%; /* Purple */
+
     --radius: 0.5rem;
   }
+
+  /* No need for a separate .dark class if dark is the only theme */
+  /* If a light/dark toggle is ever needed, this can be reinstated:
   .dark {
-    --background: 233 39% 15%; /* Dark Indigo background */
-    --foreground: 233 60% 90%; /* Light Indigo text */
-    --card: 233 39% 20%;
-    --card-foreground: 233 60% 90%;
-    --popover: 233 39% 20%;
-    --popover-foreground: 233 60% 90%;
-    --primary: 233 47% 58%; /* Lighter Deep Indigo for dark mode */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 233 39% 25%;
-    --secondary-foreground: 233 60% 90%;
-    --muted: 233 39% 25%;
-    --muted-foreground: 233 30% 65%;
-    --accent: 258 59% 67%; /* Lighter Violet for dark mode */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 233 39% 30%;
-    --input: 233 39% 30%;
-    --ring: 233 47% 58%;
-    --chart-1: 233 47% 58%;
-    --chart-2: 258 59% 67%;
-    --chart-3: 220 50% 50%;
-    --chart-4: 210 55% 55%;
-    --chart-5: 200 60% 60%;
+    --background: 220 15% 8%;
+    --foreground: 210 20% 90%;
+    --card: 220 15% 13%;
+    --card-foreground: 210 20% 90%;
+    --popover: 220 15% 12%;
+    --popover-foreground: 210 20% 90%;
+    --primary: 140 65% 50%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 15% 25%;
+    --secondary-foreground: 210 20% 80%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 210 25% 70%;
+    --accent: 200 80% 60%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 15% 25%;
+    --input: 220 15% 18%;
+    --ring: 140 65% 55%;
+    --chart-1: 140 65% 50%;
+    --chart-2: 0 60% 50%;
+    --chart-3: 200 80% 60%;
+    --chart-4: 40 90% 60%;
+    --chart-5: 280 70% 65%;
   }
+  */
 }
 
 @layer base {

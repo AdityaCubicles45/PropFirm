@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronsUpDown, Coins } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react'; // Removed Coins icon
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
@@ -26,8 +26,7 @@ export default function TokenSelector({ selectedToken, onTokenSelect }: TokenSel
       setLoading(true);
       setError(null);
       try {
-        // Fetch top 100 tokens by market cap as an example
-        const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false');
+        const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&sparkline=false');
         if (!response.ok) {
           throw new Error(`Failed to fetch tokens: ${response.statusText}`);
         }
@@ -44,44 +43,37 @@ export default function TokenSelector({ selectedToken, onTokenSelect }: TokenSel
   }, []);
 
   if (loading) {
-    return (
-      <div className="space-y-2">
-        <Skeleton className="h-10 w-full" />
-        <p className="text-sm text-muted-foreground flex items-center"><Coins className="mr-2 h-4 w-4" />Loading tokens...</p>
-      </div>
-    );
+    return <Skeleton className="h-10 w-full md:w-48" />;
   }
 
   if (error) {
-    return <p className="text-destructive">Error loading tokens: {error}</p>;
+    return <p className="text-xs text-destructive">Error: {error.substring(0,30)}</p>;
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full md:w-auto">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between shadow-sm"
+            className="w-full md:w-48 justify-between h-10 text-sm bg-card hover:bg-muted border-border focus:ring-1 focus:ring-ring" // Adjusted styling
           >
             {selectedToken ? (
-              <div className="flex items-center">
-                <Image src={selectedToken.image} alt={selectedToken.name} width={20} height={20} className="mr-2 rounded-full" data-ai-hint="token logo" />
-                {selectedToken.name} ({selectedToken.symbol.toUpperCase()})
+              <div className="flex items-center truncate">
+                {selectedToken.image && <Image src={selectedToken.image} alt={selectedToken.name} width={20} height={20} className="mr-2 rounded-full" data-ai-hint="token logo" />}
+                <span className="truncate">{selectedToken.name} ({selectedToken.symbol.toUpperCase()})</span>
               </div>
             ) : (
-              <div className="flex items-center">
-                <Coins className="mr-2 h-4 w-4" /> Select Token...
-              </div>
+              <span className="text-muted-foreground">Select Token...</span>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-popover border-border shadow-xl">
           <Command>
-            <CommandInput placeholder="Search token..." />
+            <CommandInput placeholder="Search token..." className="h-9 text-sm" />
             <CommandList>
               <CommandEmpty>No token found.</CommandEmpty>
               <CommandGroup>
@@ -93,10 +85,10 @@ export default function TokenSelector({ selectedToken, onTokenSelect }: TokenSel
                       onTokenSelect(token.id === selectedToken?.id ? null : token);
                       setOpen(false);
                     }}
-                    className="flex items-center cursor-pointer"
+                    className="flex items-center cursor-pointer text-sm py-2"
                   >
-                    <Image src={token.image} alt={token.name} width={20} height={20} className="mr-2 rounded-full" data-ai-hint="token logo" />
-                    <span className="flex-1">{token.name} ({token.symbol.toUpperCase()})</span>
+                    {token.image && <Image src={token.image} alt={token.name} width={18} height={18} className="mr-2 rounded-full" data-ai-hint="token logo" />}
+                    <span className="flex-1 truncate">{token.name} ({token.symbol.toUpperCase()})</span>
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",

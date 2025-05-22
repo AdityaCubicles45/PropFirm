@@ -1,3 +1,15 @@
+// This component's functionality is largely merged into StatsBar.tsx
+// It can be removed or kept for potential future use if a dedicated price card is needed elsewhere.
+// For now, I'll leave a very minimal version or an empty export to avoid breaking imports if any remain.
+
+// export default function PriceDisplay() { return null; }
+
+// If you are sure it's not used anywhere else, you can delete this file.
+// For safety during this large refactor, I'll comment it out.
+// If src/app/page.tsx or other components still import it,
+// they should be updated to remove the import.
+
+/*
 'use client';
 
 import type { CoinGeckoToken } from '@/lib/types';
@@ -16,19 +28,17 @@ export default function PriceDisplay({ token }: PriceDisplayProps) {
 
   useEffect(() => {
     if (token) {
-      // Initial price from CoinGecko data if available
       setPrice(token.current_price);
       
-      // Mock real-time price updates
       const intervalId = setInterval(() => {
         setPrice(prevPrice => {
-          if (prevPrice === null) return token.current_price; // Initialize if null
-          const change = (Math.random() - 0.5) * (prevPrice * 0.005); // Simulate small price fluctuation
+          if (prevPrice === null) return token.current_price; 
+          const change = (Math.random() - 0.5) * (prevPrice * 0.005); 
           const newPrice = prevPrice + change;
           setPriceChange(change);
           return newPrice;
         });
-      }, 2000); // Update every 2 seconds
+      }, 2000); 
 
       return () => clearInterval(intervalId);
     } else {
@@ -37,43 +47,9 @@ export default function PriceDisplay({ token }: PriceDisplayProps) {
     }
   }, [token]);
 
-  if (!token) {
-    return (
-      <Card className="shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Live Price</CardTitle>
-          <LineChart className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            <Skeleton className="h-8 w-32" />
-          </div>
-          <p className="text-xs text-muted-foreground">Select a token to see live price</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="shadow-lg">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-          {token.name} ({token.symbol.toUpperCase()}) Price
-        </CardTitle>
-        {priceChange >= 0 ? <TrendingUp className="h-4 w-4 text-green-500" /> : <TrendingDown className="h-4 w-4 text-red-500" />}
-      </CardHeader>
-      <CardContent>
-        {price === null ? (
-          <Skeleton className="h-8 w-32" />
-        ) : (
-          <div className={`text-2xl font-bold ${priceChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 5 })}
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Market Cap: ${token.market_cap?.toLocaleString() || 'N/A'}
-        </p>
-      </CardContent>
-    </Card>
-  );
+  // This component is not used in the new layout.
+  // Its information is displayed in the StatsBar.
+  return null; 
 }
+*/
+export {}; // Add an empty export to make it a module

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-import AppHeader from '@/components/AppHeader'; // Renamed to avoid conflict
+import AppHeader from '@/components/AppHeader';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TradeFlow',
-  description: 'Proprietary Trading Platform',
+  title: 'XADE Trading', // Updated title
+  description: 'Advanced Trading Platform',
 };
 
 export default function RootLayout({
@@ -25,11 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    // Applying dark theme globally by default as per new globals.css
+    // If a toggle was desired, className="dark" would be conditional here.
+    <html lang="en" className="dark">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
         <div className="flex flex-col min-h-screen">
           <AppHeader />
-          <main className="flex-1 container mx-auto px-4 py-8">
+          {/* Removed container mx-auto for full-width layout as in the image */}
+          <main className="flex-1">
             {children}
           </main>
         </div>
