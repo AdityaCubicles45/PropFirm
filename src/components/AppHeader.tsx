@@ -3,7 +3,10 @@
 
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { CrossmintConnectButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui';
+// Attempting to use CrossmintPayButton as suggested by the error message
+// If CrossmintProvider is commented out in layout.tsx, these hooks/components will likely cause runtime errors
+// or not function correctly as they expect to be within a CrossmintProvider context.
+// import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -16,10 +19,14 @@ const navLinks = [
 ];
 
 export default function AppHeader() {
-  const { wallet, status, disconnect } = useCrossmintWallet();
+  // const { wallet, status, disconnect } = useCrossmintWallet(); // Will error if CrossmintProvider is missing
+  const wallet: { address: string | null } | null = null; // Mocking to avoid error, ensure address property for formatAddress
+  const status = 'disconnected'; // Mocking
+  const disconnect = () => console.log("Disconnect called (Crossmint disabled)"); // Mocking
+
   const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID;
 
-  const formatAddress = (address: string) => {
+  const formatAddress = (address: string | undefined | null) => { // Make address optional
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
@@ -62,10 +69,15 @@ export default function AppHeader() {
                 Connecting...
               </Button>
           ) : crossmintClientId ? (
-            <CrossmintConnectButton
-              clientId={crossmintClientId} 
-              className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
-            />
+            // Using CrossmintPayButton instead of CrossmintConnectButton
+            // This will also likely fail or misbehave without CrossmintProvider
+            // <CrossmintPayButton
+            //   clientId={crossmintClientId}
+            //   className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
+            // />
+            <Button variant="default" size="sm" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+              Connect (Crossmint Disabled)
+            </Button>
           ) : (
             <Button variant="default" size="sm" disabled title="Crossmint Client ID not configured" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
               Connect (Setup pending)
