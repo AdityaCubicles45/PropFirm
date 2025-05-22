@@ -3,8 +3,7 @@
 
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-// Attempting to use CrossmintPayButton as suggested by build errors,
-// as CrossmintConnectButton is not found in the installed SDK version.
+// Attempting to use CrossmintPayButton as suggested by build errors
 // import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui';
 import { cn } from '@/lib/utils';
 
@@ -18,11 +17,14 @@ const navLinks = [
 ];
 
 export default function AppHeader() {
-  // Crossmint integration temporarily disabled/modified due to SDK export issues
   // const walletContext = useCrossmintWallet();
   // const wallet = walletContext?.wallet;
   // const status = walletContext?.status;
   // const disconnect = walletContext?.disconnect;
+  const wallet = null; // Placeholder
+  const status = 'disconnected'; // Placeholder
+  const disconnect = () => console.log("Disconnect placeholder"); // Placeholder
+
 
   const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID;
 
@@ -30,11 +32,6 @@ export default function AppHeader() {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
-
-  // Placeholder status until SDK issues are resolved
-  const status = 'disconnected'; // Mock status
-  const wallet = null; // Mock wallet
-  const disconnect = () => console.log("Mock disconnect called"); // Mock disconnect
 
   return (
     <header className="bg-card text-card-foreground border-b border-border">
@@ -75,14 +72,22 @@ export default function AppHeader() {
                 Connecting...
               </Button>
           ) : crossmintClientId ? (
-            // Using a standard button as CrossmintPayButton/CrossmintConnectButton is causing issues
-            <Button
-              // clientId={crossmintClientId} // Prop for Crossmint buttons
-              // Example: mintConfig={{ type: "erc-721", totalPrice: "0.01", quantity: 1 }}
-              // Example: collectionId="YOUR_COLLECTION_ID"
-              className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
+            // <CrossmintPayButton
+            //   clientId={crossmintClientId}
+            //   // The PayButton might require mintConfig or collectionId.
+            //   // For a simple connect, these might not be strictly necessary or can be minimal.
+            //   // e.g., mintConfig={{ type: "erc-721", totalPrice: "0", _quantity: 1 }} or an empty object
+            //   // If it errors about these, you might need to add a placeholder mintConfig.
+            //   // Example: mintConfig={{ type: "erc-721", totalPrice: "0.00", _quantity: 1 }}
+            //   // Example: collectionId="YOUR_COLLECTION_ID" // (if you have one, otherwise omit or use mintConfig)
+            //   className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
+            // />
+            <Button 
+              variant="default" 
+              size="sm" 
+              title="Crossmint integration temporarily disabled. Please check console." 
               onClick={() => alert("Crossmint integration is temporarily disabled. Please try connecting later or check console for details.")}
-            >
+              className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
               Connect Wallet
             </Button>
           ) : (
