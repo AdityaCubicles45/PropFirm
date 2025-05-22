@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import AppHeader from '@/components/AppHeader';
-// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui';
+// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui'; // Temporarily disabled
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

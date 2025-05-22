@@ -3,12 +3,16 @@
 
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-// Attempting to use CrossmintPayButton as suggested by build errors
-// import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui';
+// Using CrossmintPayButton as ConnectButton was consistently not found in previous attempts.
+// The useCrossmintWallet hook also appears to be unexported in the installed SDK version.
+// This will also fail if CrossmintProvider is not available (currently commented out in layout.tsx).
+import { CrossmintPayButton } from '@crossmint/client-sdk-react-ui';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
+
 
 const navLinks = [
-  { href: "/trade", label: "Trade" },
+  { href: "/", label: "Trade" },
   { href: "/docs", label: "Docs" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/campaigns", label: "Campaigns" },
@@ -17,21 +21,105 @@ const navLinks = [
 ];
 
 export default function AppHeader() {
-  // const walletContext = useCrossmintWallet();
-  // const wallet = walletContext?.wallet;
-  // const status = walletContext?.status;
-  // const disconnect = walletContext?.disconnect;
-  const wallet = null; // Placeholder
-  const status = 'disconnected'; // Placeholder
-  const disconnect = () => console.log("Disconnect placeholder"); // Placeholder
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
+  // Gracefully handle missing Crossmint context if Provider is not available or hook is not exported
+  let walletContext: any = null; // Default to null
+  let useCrossmintWalletHook: any = null; // Placeholder
 
-  const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID;
+  try {
+    // Attempt to dynamically get the hook if it were available, but it's not imported due to export errors.
+    // For now, this path won't execute as intended.
+    // walletContext = useCrossmintWalletHook ? useCrossmintWalletHook() : null;
+  } catch (e) {
+    console.warn("useCrossmintWallet hook failed, likely due to missing CrossmintProvider or the hook not being exported by the SDK.", e);
+    // walletContext is already null
+  }
+
+  const wallet = walletContext?.wallet;
+  const status = walletContext?.status;
+  const disconnect = walletContext?.disconnect;
+  const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID || "";
 
   const formatAddress = (address: string | undefined | null) => {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
+
+  const renderConnectButton = () => {
+    if (!isClient) {
+      return (
+        <Button variant="default" size="sm" disabled className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+          Loading...
+        </Button>
+      );
+    }
+
+    if (!crossmintClientId && process.env.NODE_ENV !== 'production') {
+      return (
+        <Button variant="default" size="sm" disabled title="Crossmint Client ID not configured" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+          Connect (Setup pending)
+        </Button>
+      );
+    }
+    
+    // Since CrossmintProvider is likely commented out and useCrossmintWallet is not exported,
+    // walletContext will be null here.
+    if (!walletContext) {
+        return (
+          <Link href="/auth" passHref>
+            <Button
+              variant="default"
+              size="sm"
+              className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
+              // onClick={() => alert("Crossmint integration is temporarily disabled. Please try connecting later or check console for details.")}
+            >
+              Connect Wallet
+            </Button>
+          </Link>
+        );
+    }
+    
+    if (status === 'connected' && wallet?.address) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground hidden md:inline">
+            {formatAddress(wallet.address)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => disconnect && disconnect()}
+            className="text-sm border-primary text-primary hover:bg-primary/10"
+          >
+            Disconnect
+          </Button>
+        </div>
+      );
+    } else if (status === 'connecting') {
+      return (
+         <Button variant="default" size="sm" disabled className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+            Connecting...
+          </Button>
+      );
+    } else { // disconnected or errored
+      return (
+        <Link href="/auth" passHref>
+          <Button
+            variant="default"
+            size="sm"
+            className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
+          >
+            Connect Wallet
+          </Button>
+        </Link>
+      );
+    }
+  };
+
 
   return (
     <header className="bg-card text-card-foreground border-b border-border">
@@ -53,50 +141,10 @@ export default function AppHeader() {
           <Button variant="ghost" size="sm" className="text-sm text-muted-foreground hover:text-foreground">
             Add Funds
           </Button>
-          {status === 'connected' && wallet?.address ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground hidden md:inline">
-                {formatAddress(wallet.address)}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => disconnect && disconnect()}
-                className="text-sm border-primary text-primary hover:bg-primary/10"
-              >
-                Disconnect
-              </Button>
-            </div>
-          ) : status === 'connecting' ? (
-             <Button variant="default" size="sm" disabled className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
-                Connecting...
-              </Button>
-          ) : crossmintClientId ? (
-            // <CrossmintPayButton
-            //   clientId={crossmintClientId}
-            //   // The PayButton might require mintConfig or collectionId.
-            //   // For a simple connect, these might not be strictly necessary or can be minimal.
-            //   // e.g., mintConfig={{ type: "erc-721", totalPrice: "0", _quantity: 1 }} or an empty object
-            //   // If it errors about these, you might need to add a placeholder mintConfig.
-            //   // Example: mintConfig={{ type: "erc-721", totalPrice: "0.00", _quantity: 1 }}
-            //   // Example: collectionId="YOUR_COLLECTION_ID" // (if you have one, otherwise omit or use mintConfig)
-            //   className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
-            // />
-            <Button 
-              variant="default" 
-              size="sm" 
-              title="Crossmint integration temporarily disabled. Please check console." 
-              onClick={() => alert("Crossmint integration is temporarily disabled. Please try connecting later or check console for details.")}
-              className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
-              Connect Wallet
-            </Button>
-          ) : (
-            <Button variant="default" size="sm" disabled title="Crossmint Client ID not configured" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
-              Connect (Setup pending)
-            </Button>
-          )}
+          {renderConnectButton()}
         </div>
       </div>
     </header>
   );
 }
+
