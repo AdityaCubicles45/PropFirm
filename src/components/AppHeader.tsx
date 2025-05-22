@@ -48,10 +48,10 @@ export default function AppHeader() {
               <span className="text-sm text-muted-foreground hidden md:inline">
                 {formatAddress(wallet.address)}
               </span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => disconnect()} 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => disconnect()}
                 className="text-sm border-primary text-primary hover:bg-primary/10"
               >
                 Disconnect
@@ -63,6 +63,7 @@ export default function AppHeader() {
               </Button>
           ) : crossmintClientId ? (
             <CrossmintConnectButton
+              clientId={crossmintClientId} 
               className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
             />
           ) : (
