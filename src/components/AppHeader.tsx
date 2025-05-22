@@ -3,9 +3,8 @@
 
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-// Attempting to use CrossmintPayButton as suggested by recent error messages,
-// assuming 'latest' SDK version might use this.
-// import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui'; // Temporarily commented out
+// Attempting to use CrossmintPayButton as per error suggestion
+// import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -18,11 +17,12 @@ const navLinks = [
 ];
 
 export default function AppHeader() {
-  // const { wallet, status, disconnect } = useCrossmintWallet(); // Temporarily commented out
-  const wallet = null; // Placeholder
-  const status = 'disconnected'; // Placeholder
-  const disconnect = () => {}; // Placeholder
+  // const { wallet, status, disconnect } = useCrossmintWallet() || {}; // Add default empty object if hook returns null/undefined
   const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID;
+  const status = 'disconnected'; // Mock status as Crossmint is disabled
+  const wallet = null; // Mock wallet as Crossmint is disabled
+  const disconnect = () => console.log("Disconnect called - Crossmint disabled");
+
 
   const formatAddress = (address: string | undefined | null) => {
     if (!address) return "";
@@ -34,6 +34,7 @@ export default function AppHeader() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
+            {/* <Image src="/logo-placeholder.svg" alt="XADE Logo" width={32} height={32} data-ai-hint="logo finance" /> */}
             <h1 className="text-2xl font-bold text-foreground">XADE</h1>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
@@ -51,13 +52,12 @@ export default function AppHeader() {
           {status === 'connected' && wallet?.address ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground hidden md:inline">
-                {/* {formatAddress(wallet.address)} */} {/* Temporarily commented out */}
-                Connected (Crossmint Disabled)
+                {formatAddress(wallet.address)}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => disconnect()}
+                onClick={() => disconnect && disconnect()}
                 className="text-sm border-primary text-primary hover:bg-primary/10"
               >
                 Disconnect
@@ -69,13 +69,16 @@ export default function AppHeader() {
               </Button>
           ) : crossmintClientId ? (
             // Using CrossmintPayButton as suggested by the error
-            // <CrossmintPayButton // Temporarily commented out
+            // <CrossmintPayButton
             //   clientId={crossmintClientId}
             //   className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
+            //   // Add any other required props for CrossmintPayButton if known, e.g., collectionId
+            //   // collectionId="YOUR_COLLECTION_ID" // Example: This might be required
+            //   // mintConfig={{totalPrice: '0.01', _quantity: 1}} // Example: This might be required
             // />
-            <Button variant="default" size="sm" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
-              Connect (Crossmint Disabled)
-            </Button>
+             <Button variant="default" size="sm" title="Connect (Crossmint temporarily disabled)" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+                Connect
+              </Button>
           ) : (
             <Button variant="default" size="sm" disabled title="Crossmint Client ID not configured" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
               Connect (Setup pending)
