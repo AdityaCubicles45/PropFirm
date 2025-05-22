@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import AppHeader from '@/components/AppHeader';
-// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui';
+// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui'; // Temporarily commented out
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,14 +28,14 @@ export default function RootLayout({
 }>) {
   const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID;
 
-  if (!crossmintClientId && process.env.NODE_ENV !== 'production') {
-    console.warn("Crossmint Client ID (NEXT_PUBLIC_CROSSMINT_CLIENT_ID) is not set in .env. Crossmint features will be disabled if the ID is missing.");
-  }
+  // if (!crossmintClientId && process.env.NODE_ENV !== 'production') { // Temporarily commented out
+  //   console.warn("Crossmint Client ID (NEXT_PUBLIC_CROSSMINT_CLIENT_ID) is not set in .env. Crossmint features will be disabled if the ID is missing.");
+  // }
 
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
-        {/* <CrossmintProvider clientId={crossmintClientId || ""}> */}
+        {/* <CrossmintProvider clientId={crossmintClientId || ""}> // Temporarily commented out */}
           <div className="flex flex-col min-h-screen">
             <AppHeader />
             <main className="flex-1">
@@ -43,7 +43,7 @@ export default function RootLayout({
             </main>
           </div>
           <Toaster />
-        {/* </CrossmintProvider> */}
+        {/* </CrossmintProvider> // Temporarily commented out */}
       </body>
     </html>
   );

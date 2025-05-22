@@ -3,8 +3,8 @@
 
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
-// Attempting to use CrossmintPayButton as per error suggestion
-// import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui';
+// Attempting to use CrossmintPayButton as per build system suggestion for latest SDK version
+// import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui'; // Temporarily commented out
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -17,11 +17,12 @@ const navLinks = [
 ];
 
 export default function AppHeader() {
-  // const { wallet, status, disconnect } = useCrossmintWallet() || {}; // Add default empty object if hook returns null/undefined
+  // const { wallet, status, disconnect } = useCrossmintWallet() || {}; // Temporarily commented out
+  const wallet = null; // Placeholder
+  const status = 'disconnected'; // Placeholder
+  const disconnect = () => {}; // Placeholder
+
   const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID;
-  const status = 'disconnected'; // Mock status as Crossmint is disabled
-  const wallet = null; // Mock wallet as Crossmint is disabled
-  const disconnect = () => console.log("Disconnect called - Crossmint disabled");
 
 
   const formatAddress = (address: string | undefined | null) => {
@@ -68,17 +69,15 @@ export default function AppHeader() {
                 Connecting...
               </Button>
           ) : crossmintClientId ? (
-            // Using CrossmintPayButton as suggested by the error
-            // <CrossmintPayButton
+            // <CrossmintPayButton // Temporarily commented out
             //   clientId={crossmintClientId}
+            //   // collectionId="YOUR_COLLECTION_ID" // Example: might be needed for PayButton
+            //   // mintConfig={{ type: "erc-721", totalPrice: "0.01", _quantity: 1 }} // Example: might be needed
             //   className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
-            //   // Add any other required props for CrossmintPayButton if known, e.g., collectionId
-            //   // collectionId="YOUR_COLLECTION_ID" // Example: This might be required
-            //   // mintConfig={{totalPrice: '0.01', _quantity: 1}} // Example: This might be required
             // />
-             <Button variant="default" size="sm" title="Connect (Crossmint temporarily disabled)" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
-                Connect
-              </Button>
+             <Button variant="default" size="sm" title="Connect (Crossmint Disabled)" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
+              Connect
+            </Button>
           ) : (
             <Button variant="default" size="sm" disabled title="Crossmint Client ID not configured" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
               Connect (Setup pending)
