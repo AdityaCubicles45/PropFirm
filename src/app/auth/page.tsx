@@ -36,6 +36,7 @@ export default function AuthPage() {
   const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID || "";
 
   useEffect(() => {
+    // This redirection will likely not work if CrossmintProvider/useCrossmintWallet are not functional
     if (status === 'connected' && wallet?.address) {
       router.push('/');
     }
@@ -103,7 +104,14 @@ export default function AuthPage() {
                   // The PayButton is used here as ConnectButton has consistently failed.
                   // It might require mintConfig or collectionId for full functionality.
                   // Example: mintConfig={{ type: "erc-721", totalPrice: "0.00", _quantity: 1 }}
-                  // collectionId="YOUR_COLLECTION_ID" 
+                  // collectionId="YOUR_COLLECTION_ID"
+                  uiConfig={{
+                    components: { // Experimental feature to change button text
+                      button: {
+                        text: "Connect with Crossmint",
+                      },
+                    },
+                  }}
                   className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 h-12 text-base")}
                 />
               ) : (
@@ -120,6 +128,7 @@ export default function AuthPage() {
     );
   }
   
+  // This state will likely not be reached if CrossmintProvider/useCrossmintWallet are non-functional
   if (status === 'connected') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 text-center">
@@ -154,7 +163,7 @@ export default function AuthPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center space-y-6">
-          {status === 'connecting' ? (
+          {status === 'connecting' ? ( // This status will likely not be accurate
             <div className="flex flex-col items-center space-y-2">
               <div role="status" className="flex justify-center">
                   <svg aria-hidden="true" className="w-8 h-8 text-muted-foreground animate-spin fill-primary" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -170,7 +179,14 @@ export default function AuthPage() {
               <CrossmintPayButton
                 clientId={crossmintClientId}
                 // Example: mintConfig={{ type: "erc-721", totalPrice: "0.00", _quantity: 1 }}
-                // collectionId="YOUR_COLLECTION_ID" 
+                // collectionId="YOUR_COLLECTION_ID"
+                 uiConfig={{
+                    components: { // Experimental feature to change button text
+                      button: {
+                        text: "Connect with Crossmint",
+                      },
+                    },
+                  }}
                 className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 h-12 text-base")}
               />
             ) : (
@@ -187,3 +203,5 @@ export default function AuthPage() {
     </div>
   );
 }
+
+    
