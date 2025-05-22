@@ -26,7 +26,7 @@ export default function TokenSelector({ selectedToken, onTokenSelect }: TokenSel
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1&sparkline=false');
+        const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=300&page=1&sparkline=false');
         if (!response.ok) {
           throw new Error(`Failed to fetch tokens: ${response.statusText}`);
         }
