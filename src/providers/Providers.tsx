@@ -25,6 +25,8 @@ export default function Providers({ children }: { children: ReactNode }) {
         );
     }
     
+    // Temporarily remove CrossmintAuthProvider and CrossmintProvider as they are causing build errors.
+    // Authentication will likely not work until this is resolved with a compatible SDK version.
     // return (
     //     <CrossmintProvider apiKey={clientApiKey!}>
     //         {/* <CrossmintAuthProvider
@@ -38,5 +40,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     //         {/* </CrossmintAuthProvider> */}
     //     </CrossmintProvider>
     // );
-    return <>{children}</>; // Render children directly as CrossmintProvider is unavailable
+    console.warn("CrossmintProvider and CrossmintAuthProvider are temporarily disabled due to SDK export issues. Crossmint features will be unavailable.");
+    return <>{children}</>; // Render children directly without Crossmint providers
 }
+

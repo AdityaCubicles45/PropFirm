@@ -1,7 +1,7 @@
 
 "use client";
 
-// import { useWallet } from "@crossmint/client-sdk-react-ui"; // Re-enabled import - Temporarily commented out again due to export error
+// import { useWallet } from "@crossmint/client-sdk-react-ui"; // Temporarily disabled due to SDK export issues
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from 'react';
 
@@ -11,16 +11,17 @@ function Status() {
         setIsClient(true);
     }, []);
 
-    // Attempt to use Crossmint wallet context, will be null if SDK exports are missing or provider is not set up
-    let walletContext: any = null; 
-    // try {
-    //     if (isClient && typeof useWallet === 'function') { // Check if useWallet was successfully (not) imported
-    //         // walletContext = useWallet(); // This line would cause an error if useWallet is not defined
-    //     }
-    // } catch (e) {
-    //     console.warn("WalletComponent: Failed to dynamically access Crossmint useWallet. SDK issue likely.", e);
-    //     walletContext = null; // Ensure walletContext is null if dynamic access fails
-    // }
+    // Attempt to use Crossmint wallet context
+    let walletContext: any | null = null; // Use 'any' as useWallet is not being imported
+    try {
+        if (isClient) { 
+            // walletContext = useWallet(); // This line would cause an error if useWallet is not defined or CrossmintProvider is missing
+            // Since useWallet is not imported due to export errors, walletContext remains null.
+        }
+    } catch (e) {
+        console.warn("WalletComponent: Failed to access Crossmint useWallet. SDK issue likely, or CrossmintProvider is missing/failing.", e);
+        walletContext = null; // Ensure walletContext is null if access fails
+    }
     
     const wallet = walletContext?.wallet;
     const status = walletContext?.status;
@@ -62,3 +63,4 @@ export default function WalletComponent() {
         </Card>
     );
 }
+

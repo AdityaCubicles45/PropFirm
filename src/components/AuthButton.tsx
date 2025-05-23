@@ -2,7 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-// import { useAuth } from "@crossmint/client-sdk-react-ui"; // Re-enabled import - Temporarily commented out again due to export error
+// import { useAuth } from "@crossmint/client-sdk-react-ui"; // Temporarily disabled due to SDK export issues
 import { useEffect, useState } from 'react';
 
 export default function AuthButton() {
@@ -11,29 +11,21 @@ export default function AuthButton() {
         setIsClient(true);
     }, []);
 
-    // Attempt to use Crossmint auth context, will be null if SDK exports are missing or provider is not set up
-    let auth: any = null; 
-    let login: (() => void) | undefined = undefined;
-    let logout: (() => void) | undefined = undefined;
-    let jwt: string | null | undefined = undefined;
-
-    // This try-catch block is a bit of a long shot, as the primary issue is the import itself.
-    // If the import fails, useAuth will be undefined.
-    // try {
-    //     if (isClient) {
-    //         // const sdk = require("@crossmint/client-sdk-react-ui"); // Dynamic import not ideal for build/tree-shaking
-    //         // if (sdk && sdk.useAuth) {
-    //         //     auth = sdk.useAuth();
-    //         //     login = auth?.login;
-    //         //     logout = auth?.logout;
-    //         //     jwt = auth?.jwt;
-    //         // }
-    //     }
-    // } catch (e) {
-    //     console.warn("AuthButton: Failed to dynamically access Crossmint useAuth. SDK issue likely.", e);
-    //     auth = null; // Ensure auth is null if dynamic access fails
-    // }
-
+    // Attempt to use Crossmint auth context
+    let auth: any | null = null; // Use 'any' as useAuth is not being imported
+    try {
+        if (isClient) {
+            // auth = useAuth(); // This line would cause an error if useAuth is not defined or CrossmintAuthProvider is missing
+            // Since useAuth is not imported due to export errors, auth remains null.
+        }
+    } catch (e) {
+        console.warn("AuthButton: Failed to access Crossmint useAuth. SDK issue likely, or CrossmintAuthProvider is missing/failing.", e);
+        auth = null; // Ensure auth is null if access fails
+    }
+    
+    const login = auth?.login;
+    const logout = auth?.logout;
+    const jwt = auth?.jwt;
 
     if (!isClient) {
         return <Button disabled>Loading Auth...</Button>;
