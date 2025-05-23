@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import AppHeader from '@/components/AppHeader';
-// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui'; // Temporarily disabled due to export errors in the SDK version
+// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui'; // Re-disabled due to persistent export error
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -32,8 +32,15 @@ export default function RootLayout({
     console.warn("Crossmint Client ID (NEXT_PUBLIC_CROSSMINT_CLIENT_ID) is not set in .env. Crossmint features will be disabled if the ID is missing or the provider is not correctly integrated.");
   }
 
-  // CrossmintProvider is kept commented out because it consistently causes "Export not found" errors with the current SDK version (latest/1.2.0)
-  // If this provider is missing, useCrossmintWallet and other context-dependent features will not work.
+  // Temporarily disabling CrossmintProvider due to persistent export errors.
+  // Re-enable once SDK issues are resolved.
+  /*
+  if (!crossmintClientId) {
+    console.error("Crossmint Client ID is missing. Crossmint features will be disabled.");
+    // Optionally, render a more user-friendly error message or a fallback UI
+  }
+  */
+
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}>
@@ -50,5 +57,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    

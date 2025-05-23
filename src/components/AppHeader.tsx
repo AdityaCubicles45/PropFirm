@@ -4,11 +4,12 @@
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 // Using CrossmintPayButton as ConnectButton was consistently not found in previous attempts.
-// The useCrossmintWallet hook also appears to be unexported in the installed SDK version.
-// This will also fail if CrossmintProvider is not available (currently commented out in layout.tsx).
-import { CrossmintPayButton } from '@crossmint/client-sdk-react-ui';
+// This will also fail if CrossmintProvider is not available.
+// import { CrossmintPayButton, useCrossmintWallet } from '@crossmint/client-sdk-react-ui'; // Re-disabled due to persistent export error
+import type { CrossmintWalletContextState } from '@crossmint/client-sdk-react-ui'; // Keep type for structure
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { useToast } from "@/hooks/use-toast";
 
 
 const navLinks = [
@@ -20,23 +21,48 @@ const navLinks = [
   { href: "/mobile-app", label: "Mobile App" },
 ];
 
+// Mock CrossmintPayButton if not available
+const CrossmintPayButtonFallback = ({ children, className, ...props }: any) => (
+  <Button {...props} className={className} disabled>
+    {children || "Crossmint Unavailable"}
+  </Button>
+);
+let CrossmintPayButton = CrossmintPayButtonFallback; // Default to fallback
+
+// Mock useCrossmintWallet if not available
+const useCrossmintWalletFallback = (): CrossmintWalletContextState | null => null;
+let useCrossmintWallet: () => CrossmintWalletContextState | null = useCrossmintWalletFallback;
+
+try {
+  // Dynamically try to import, but assume it might fail based on previous errors
+  const sdk = require('@crossmint/client-sdk-react-ui');
+  if (sdk.CrossmintPayButton) {
+    // @ts-ignore
+    CrossmintPayButton = sdk.CrossmintPayButton;
+  }
+  if (sdk.useCrossmintWallet) {
+    useCrossmintWallet = sdk.useCrossmintWallet;
+  }
+} catch (e) {
+  console.warn("Crossmint SDK components not fully available. AppHeader may not function correctly.", e);
+}
+
+
 export default function AppHeader() {
   const [isClient, setIsClient] = useState(false);
+  const { toast } = useToast();
+
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Gracefully handle missing Crossmint context if Provider is not available or hook is not exported
-  let walletContext: any = null; // Default to null
-  let useCrossmintWalletHook: any = null; // Placeholder
-
+  let walletContext: CrossmintWalletContextState | null = null;
+  let crossmintProviderLikelyMissing = false;
   try {
-    // Attempt to dynamically get the hook if it were available, but it's not imported due to export errors.
-    // For now, this path won't execute as intended.
-    // walletContext = useCrossmintWalletHook ? useCrossmintWalletHook() : null;
+    walletContext = useCrossmintWallet();
   } catch (e) {
-    console.warn("useCrossmintWallet hook failed, likely due to missing CrossmintProvider or the hook not being exported by the SDK.", e);
-    // walletContext is already null
+    console.warn("useCrossmintWallet hook failed, Crossmint context (CrossmintProvider) might be missing.", e);
+    crossmintProviderLikelyMissing = true; // Assume provider is missing if hook fails
   }
 
   const wallet = walletContext?.wallet;
@@ -48,6 +74,14 @@ export default function AppHeader() {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
+  
+  const handleDisabledConnectClick = () => {
+    toast({
+      title: "Crossmint Unavailable",
+      description: "Crossmint integration is temporarily disabled. Please try connecting later or check console for details.",
+      variant: "destructive",
+    });
+  };
 
   const renderConnectButton = () => {
     if (!isClient) {
@@ -57,30 +91,21 @@ export default function AppHeader() {
         </Button>
       );
     }
+    
+    const showConfigError = !crossmintClientId && process.env.NODE_ENV !== 'production';
 
-    if (!crossmintClientId && process.env.NODE_ENV !== 'production') {
+    if (showConfigError || crossmintProviderLikelyMissing) {
       return (
-        <Button variant="default" size="sm" disabled title="Crossmint Client ID not configured" className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}>
-          Connect (Setup pending)
+        <Button
+          variant="default"
+          size="sm"
+          onClick={handleDisabledConnectClick}
+          title={showConfigError ? "Crossmint Client ID not configured" : "Crossmint Provider potentially missing"}
+          className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90 cursor-not-allowed")}
+        >
+          Connect (Setup Issue)
         </Button>
       );
-    }
-    
-    // Since CrossmintProvider is likely commented out and useCrossmintWallet is not exported,
-    // walletContext will be null here.
-    if (!walletContext) {
-        return (
-          <Link href="/auth" passHref>
-            <Button
-              variant="default"
-              size="sm"
-              className={cn(buttonVariants({ variant: "default", size: "sm" }), "bg-primary-foreground text-primary hover:bg-primary-foreground/90")}
-              // onClick={() => alert("Crossmint integration is temporarily disabled. Please try connecting later or check console for details.")}
-            >
-              Connect Wallet
-            </Button>
-          </Link>
-        );
     }
     
     if (status === 'connected' && wallet?.address) {
@@ -105,7 +130,7 @@ export default function AppHeader() {
             Connecting...
           </Button>
       );
-    } else { // disconnected or errored
+    } else { 
       return (
         <Link href="/auth" passHref>
           <Button
@@ -147,4 +172,3 @@ export default function AppHeader() {
     </header>
   );
 }
-
