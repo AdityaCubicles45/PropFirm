@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import AppHeader from '@/components/AppHeader';
-// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui'; // Re-disabled due to persistent export error
+// import { CrossmintProvider } from '@crossmint/client-sdk-react-ui'; // Temporarily commented out
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,17 +29,14 @@ export default function RootLayout({
   const crossmintClientId = process.env.NEXT_PUBLIC_CROSSMINT_CLIENT_ID || "";
 
   if (!crossmintClientId && process.env.NODE_ENV !== 'production') {
-    console.warn("Crossmint Client ID (NEXT_PUBLIC_CROSSMINT_CLIENT_ID) is not set in .env. Crossmint features will be disabled if the ID is missing or the provider is not correctly integrated.");
+    console.warn("Crossmint Client ID (NEXT_PUBLIC_CROSSMINT_CLIENT_ID) is not set in .env. Crossmint features will be disabled if the ID is missing.");
   }
-
-  // Temporarily disabling CrossmintProvider due to persistent export errors.
-  // Re-enable once SDK issues are resolved.
-  /*
-  if (!crossmintClientId) {
-    console.error("Crossmint Client ID is missing. Crossmint features will be disabled.");
-    // Optionally, render a more user-friendly error message or a fallback UI
+  
+  // CrossmintProvider is temporarily commented out due to SDK export issues.
+  // Re-enable it once the SDK version/compatibility issue is resolved.
+  if (crossmintClientId && process.env.NODE_ENV !== 'production') {
+    console.warn("CrossmintProvider is currently commented out in src/app/layout.tsx due to SDK issues. Crossmint functionality will be unavailable.");
   }
-  */
 
   return (
     <html lang="en" className="dark">
