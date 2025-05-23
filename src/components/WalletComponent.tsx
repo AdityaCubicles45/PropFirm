@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useWallet } from "@crossmint/client-sdk-react-ui";
+// import { useWallet } from "@crossmint/client-sdk-react-ui"; // Temporarily commented out due to export error
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from 'react';
 
@@ -12,13 +12,19 @@ function Status() {
     }, []);
 
     // Ensure useWallet is only called client-side and after CrossmintProvider is mounted.
-    const walletContext = isClient ? useWallet() : null;
+    // const walletContext = isClient ? useWallet() : null; // Temporarily disabled
+    const walletContext: any = null; // Mock context due to SDK issues
+
     const wallet = walletContext?.wallet;
     const status = walletContext?.status;
     const error = walletContext?.error;
 
-    if (!isClient || !walletContext) {
+    if (!isClient) {
          return <div className="text-zinc-400">Loading wallet status...</div>;
+    }
+
+    if (!walletContext) {
+        return <div className="text-orange-500">Wallet features unavailable (SDK issue).</div>;
     }
 
     if (status === "loading-error") {
