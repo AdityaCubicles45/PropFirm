@@ -6,15 +6,15 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertTriangle, Wifi, WifiOff } from 'lucide-react';
+import { AlertTriangle, Wifi, WifiOff, PackageOpen } from 'lucide-react';
 
 interface OrderBookProps {
   token: CoinGeckoToken | null;
-  onPriceUpdate: (price: number | null) => void; // Callback to update parent's price
+  onPriceUpdate: (price: number | null) => void; 
   currentPrice: number | null; // Received from parent, used for display fallback
 }
 
-const MAX_LEVELS = 10; // Display top N levels
+const MAX_LEVELS = 10; 
 
 export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderBookProps) {
   const [bids, setBids] = useState<OrderBookEntry[]>([]);
@@ -33,6 +33,7 @@ export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderB
       setBids([]);
       setAsks([]);
       setIsConnected(false);
+      setIsLoading(false);
       setError(null);
       onPriceUpdate(null);
       return;
@@ -41,10 +42,11 @@ export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderB
     const pair = `${token.symbol.toLowerCase()}usdt`;
     const wsUrl = `wss://stream.binance.com:9443/ws/${pair}@depth`;
 
-    setIsLoading(true);
-    setError(null);
     setBids([]);
     setAsks([]);
+    setIsLoading(true);
+    setError(null);
+    setIsConnected(false); // Reset connection status
 
     if (wsRef.current) {
       wsRef.current.close();
@@ -63,7 +65,6 @@ export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderB
     newWs.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data as string);
-        // The @depth stream directly gives the full order book levels
         if (data.bids && data.asks) {
           const formattedBids: OrderBookEntry[] = data.bids
             .slice(0, MAX_LEVELS)
@@ -73,29 +74,28 @@ export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderB
             .map((a: [string, string]) => ({ price: parseFloat(a[0]), quantity: parseFloat(a[1]) }));
           
           setBids(formattedBids);
-          setAsks(formattedAsks);
+          setAsks(formattedAsks.sort((a, b) => a.price - b.price)); // Ensure asks are sorted ascending for display
 
           if (formattedBids.length > 0 && formattedAsks.length > 0) {
-            const bestBid = formattedBids[0].price;
-            const bestAsk = formattedAsks[0].price;
+            const bestBid = formattedBids[0].price; // Bids are sorted descending, so first is highest
+            const bestAsk = formattedAsks[0].price; // Asks are sorted ascending, so first is lowest
             if (bestBid && bestAsk) {
                 onPriceUpdate((bestBid + bestAsk) / 2);
             }
+          } else {
+            onPriceUpdate(null); // No valid bid/ask spread
           }
-        } else if (data.e === 'depthUpdate') {
-            // For handling @depthUpdate streams if chosen (more complex state management)
-            // For now, we primarily rely on the full @depth stream's periodic updates.
-            // console.log('Depth update received (not fully processed for this demo):', data);
         }
       } catch (e) {
         console.error('Error processing WebSocket message:', e);
         setError('Error processing order book data.');
+        setIsLoading(false); // Stop loading on parse error
       }
     };
 
     newWs.onerror = (event) => {
       console.error(`WebSocket error for ${pair}:`, event);
-      setError(`Failed to connect to ${pair} order book. Token might not be listed on Binance or network issue.`);
+      setError(`Connection failed. Token pair '${token.symbol.toUpperCase()}/USDT' may not be available on Binance or network issue.`);
       setIsLoading(false);
       setIsConnected(false);
       onPriceUpdate(null);
@@ -104,7 +104,9 @@ export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderB
     newWs.onclose = () => {
       console.log(`Disconnected from Binance WebSocket for ${pair}`);
       setIsConnected(false);
-      // Don't clear error here, it might be an error-driven close
+      setIsLoading(false); // Ensure loading is stopped
+      // Don't clear error, it might be an error-driven close or a clean close after an error.
+      // If it was a clean close without prior error, the user might just see "No data received".
     };
 
     return () => {
@@ -116,10 +118,10 @@ export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderB
   }, [token, onPriceUpdate]);
 
   const renderOrderBookTable = (entries: OrderBookEntry[], type: 'Bids' | 'Asks') => (
-    <div className="flex-1">
+    <div className="flex-1 overflow-y-auto">
       <Table className="text-xs">
         <TableHeader>
-          <TableRow className="border-b-0">
+          <TableRow className="border-b-0 sticky top-0 bg-card z-10">
             <TableHead className="w-1/2 py-1 px-2 text-left">Price (USD)</TableHead>
             <TableHead className="w-1/2 py-1 px-2 text-right">Size ({token?.symbol.toUpperCase()})</TableHead>
           </TableRow>
@@ -143,44 +145,69 @@ export default function OrderBook({ token, onPriceUpdate, currentPrice }: OrderB
       </Table>
     </div>
   );
+  
+  const topAskPrice = asks.length > 0 ? asks[0].price : null; // Asks are sorted ascending
+  const topBidPrice = bids.length > 0 ? bids[0].price : null; // Bids are sorted descending
+  
+  let calculatedMidPrice: number | null = null;
+  if (topAskPrice !== null && topBidPrice !== null) {
+    calculatedMidPrice = (topAskPrice + topBidPrice) / 2;
+  }
 
-  const topAskPrice = asks.length > 0 ? asks[0].price : null;
-  const topBidPrice = bids.length > 0 ? bids[0].price : null;
-  const displayPrice = currentPrice ?? (topAskPrice && topBidPrice ? (topAskPrice + topBidPrice) / 2 : null);
+  // Prioritize calculated mid-price from WS, fallback to parent's currentPrice if WS data isn't complete.
+  const displayPrice = calculatedMidPrice ?? currentPrice;
 
+
+  const NoDataMessage = () => (
+    <div className="flex-grow flex flex-col items-center justify-center p-4 text-center">
+        <PackageOpen className="h-8 w-8 text-muted-foreground mb-2" />
+        <p className="text-sm text-muted-foreground font-medium">No Order Book Data</p>
+        <p className="text-xs text-muted-foreground">
+            {token ? `Waiting for data for ${token.symbol.toUpperCase()}/USDT or pair not actively traded.` : 'Select a token.'}
+        </p>
+    </div>
+  );
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+      <CardHeader className="py-3 px-4 flex flex-row items-center justify-between border-b">
         <CardTitle className="text-sm font-medium">Order Book</CardTitle>
-        {token && (isConnected ? <Wifi className="h-4 w-4 text-green-500" /> : <WifiOff className="h-4 w-4 text-red-500" />)}
+        {token && (isConnected ? <Wifi className="h-4 w-4 text-green-500" title="Connected" /> : <WifiOff className="h-4 w-4 text-red-500" title="Disconnected"/>)}
       </CardHeader>
       <CardContent className="flex-grow p-0 flex flex-col overflow-hidden">
         {!token ? (
           <div className="flex-grow flex items-center justify-center p-4">
             <p className="text-xs text-muted-foreground">Select a token to see the order book.</p>
           </div>
+        ) : isLoading ? (
+             <div className="flex-grow flex flex-col items-center justify-center p-4">
+                <Skeleton className="h-4 w-20 mb-2" />
+                 {Array.from({ length: MAX_LEVELS / 2 * 2 + 1 }).map((_, i) => (
+                    <div key={`load-skel-${i}`} className="flex w-full px-2 py-0.5">
+                        <Skeleton className="h-3 w-1/2 mr-1" />
+                        <Skeleton className="h-3 w-1/2 ml-1" />
+                    </div>
+                ))}
+                <p className="text-sm text-muted-foreground mt-2">Connecting to order book...</p>
+            </div>
         ) : error ? (
           <div className="flex-grow flex flex-col items-center justify-center p-4 text-center">
             <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
             <p className="text-sm text-destructive font-medium">Connection Error</p>
             <p className="text-xs text-muted-foreground">{error}</p>
           </div>
+        ) : (bids.length === 0 && asks.length === 0 && !isLoading) ? (
+            <NoDataMessage />
         ) : (
           <>
-            {renderOrderBookTable(asks.slice().sort((a,b) => a.price - b.price), 'Asks')}
+            {renderOrderBookTable(asks, 'Asks')} {/* Asks are already sorted ascending */}
              <div className="py-1.5 px-4 border-t border-b border-border my-1 text-center">
                 <span className={`text-lg font-semibold ${ (displayPrice ?? 0) > (currentPrice ?? (displayPrice ?? 0)-0.01) ? 'text-green-500' : (displayPrice ?? 0) < (currentPrice ?? (displayPrice ?? 0)+0.01) ? 'text-red-500' : 'text-foreground'}`}>
-                    {displayPrice?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: Math.max(2, (displayPrice?.toString().split('.')[1] || '').length )}) ?? (isLoading ? 'Loading...' : '-.--')}
+                    {displayPrice !== null ? displayPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: Math.max(2, (displayPrice.toString().split('.')[1] || '').length )}) : '-.--'}
                 </span>
             </div>
-            {renderOrderBookTable(bids, 'Bids')}
+            {renderOrderBookTable(bids, 'Bids')} {/* Bids are already sorted descending */}
           </>
-        )}
-        {(isLoading && !error && token) && (
-            <div className="absolute inset-0 bg-card/50 flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">Connecting to order book...</p>
-            </div>
         )}
       </CardContent>
     </Card>
