@@ -16,7 +16,7 @@ const CrossmintPayButtonFallback = ({ children, className, ...props }: any) => (
     {children || "Crossmint Unavailable"}
   </Button>
 );
-const CrossmintPayButton = CrossmintPayButtonFallback; // Default to fallback
+let CrossmintPayButton = CrossmintPayButtonFallback; // Changed from const to let
 
 // Mock useCrossmintWallet if not available
 const useCrossmintWalletFallback = (): CrossmintWalletContextState | null => null;
@@ -85,7 +85,7 @@ export default function AuthPage() {
   const showConfigError = !crossmintClientId && process.env.NODE_ENV !== 'production';
   // Also consider CrossmintProvider itself might be missing, which is a higher-level issue.
   // This simple check for walletContext is a proxy for "is Crossmint generally working?"
-  const crossmintLikelyUnavailable = !walletContext; 
+  const crossmintLikelyUnavailable = !walletContext && !useCrossmintWalletFallback(); // Check against actual fallback
 
 
   if (showConfigError || crossmintLikelyUnavailable) {
